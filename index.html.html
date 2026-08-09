@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UP4-LuckyWheel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com/">
+  <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+  <link href="./lucky wheel_files/css2" rel="stylesheet">
+  <style>
+    :root, [data-theme="light"] {
+      --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
+      --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+      --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
+      --text-xl: clamp(1.5rem, 1.2rem + 1.25vw, 2.1rem);
+      --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem; --space-5: 1.25rem;
+      --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem;
+      --color-bg: #f7f6f2;
+      --color-surface: rgba(251, 251, 249, 0.92);
+      --color-surface-2: #f1eee8;
+      --color-border: rgba(40, 37, 29, 0.12);
+      --color-text: #28251d;
+      --color-text-muted: #6f6b64;
+      --color-text-inverse: #f9f8f4;
+      --color-primary: #01696f;
+      --color-primary-hover: #0c4e54;
+      --color-warning: #da7101;
+      --color-success: #437a22;
+      --color-danger: #a12c7b;
+      --shadow-sm: 0 1px 2px rgba(34, 29, 20, 0.08);
+      --shadow-md: 0 12px 32px rgba(34, 29, 20, 0.12);
+      --radius-md: 0.75rem; --radius-lg: 1.2rem; --radius-full: 9999px;
+      --transition: 220ms cubic-bezier(0.16, 1, 0.3, 1);
+      --font-body: 'Inter', sans-serif;
+    }
+    [data-theme="dark"] {
+      --color-bg: #171614;
+      --color-surface: rgba(28, 27, 25, 0.92);
+      --color-surface-2: #211f1c;
+      --color-border: rgba(255, 255, 255, 0.1);
+      --color-text: #ece9e2;
+      --color-text-muted: #b3afa8;
+      --color-text-inverse: #f9f8f4;
+      --color-primary: #4f98a3;
+      --color-primary-hover: #6fb4bd;
+      --color-warning: #fdab43;
+      --color-success: #88c46a;
+      --color-danger: #de79b5;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+      --shadow-md: 0 14px 34px rgba(0, 0, 0, 0.35);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+    body {
+      min-height: 100dvh;
+      font-family: var(--font-body);
+      font-size: var(--text-base);
+      color: var(--color-text);
+      background: radial-gradient(circle at top, rgba(1,105,111,0.12), transparent 32%), linear-gradient(180deg, var(--color-bg) 0%, var(--color-surface-2) 100%);
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; border: none; }
+    canvas, svg { display: block; max-width: 100%; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+    .app { width: min(1120px, calc(100% - 2rem)); margin: 0 auto; padding: clamp(1.25rem, 3vw, 2.5rem) 0 clamp(2rem, 4vw, 3rem); }
+    .header { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); margin-bottom: var(--space-8); }
+    .brand { display: flex; align-items: center; gap: 0.9rem; }
+    .logo { width: 44px; height: 44px; color: var(--color-primary); }
+    .brand h1 { font-size: var(--text-lg); line-height: 1.1; font-weight: 800; }
+    .brand p { color: var(--color-text-muted); font-size: var(--text-sm); margin-top: 0.2rem; }
+    .ghost-btn, .primary-btn, .danger-btn {
+      min-height: 44px; padding: 0.85rem 1.15rem; border-radius: var(--radius-full);
+      transition: transform var(--transition), background var(--transition), color var(--transition), box-shadow var(--transition);
+      box-shadow: var(--shadow-sm);
+    }
+    .ghost-btn { background: var(--color-surface); color: var(--color-text); border: 1px solid var(--color-border); }
+    .ghost-btn:hover, .primary-btn:hover, .danger-btn:hover { transform: translateY(-1px); }
+    .primary-btn { background: var(--color-primary); color: var(--color-text-inverse); font-weight: 700; }
+    .primary-btn:hover { background: var(--color-primary-hover); }
+    .danger-btn { background: var(--color-danger); color: #fff; font-weight: 700; }
+    .ghost-btn[disabled], .primary-btn[disabled], .danger-btn[disabled] { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .layout { display: grid; grid-template-columns: minmax(320px, 1.15fr) minmax(280px, 0.85fr); gap: var(--space-8); align-items: start; }
+    .panel {
+      background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md); backdrop-filter: blur(12px);
+    }
+    .wheel-panel, .info-panel, .admin-panel { padding: clamp(1rem, 2.5vw, 1.35rem); }
+    .wheel-shell {
+      position: relative; display: grid; place-items: center; padding: clamp(0.35rem, 2vw, 0.85rem);
+      border-radius: calc(var(--radius-lg) + 0.4rem);
+      background: linear-gradient(180deg, rgba(255,255,255,0.7), rgba(241,238,232,0.92)); overflow: hidden; isolation: isolate;
+    }
+    .pointer {
+      position: absolute; top: 0.35rem; left: 50%; transform: translateX(-50%); z-index: 3; width: 0; height: 0;
+      border-left: 18px solid transparent; border-right: 18px solid transparent; border-top: 34px solid var(--color-warning);
+      filter: drop-shadow(0 6px 10px rgba(0,0,0,0.16));
+    }
+    .hub {
+      position: absolute; width: 92px; height: 92px; border-radius: 50%; z-index: 2; display: grid; place-items: center; text-align: center;
+      background: linear-gradient(180deg, #fff, #ece7dc); border: 8px solid rgba(251,251,249,0.95); box-shadow: 0 0 0 1px rgba(40,37,29,0.08), 0 16px 32px rgba(0,0,0,0.12);
+      color: var(--color-primary); font-size: 0.86rem; font-weight: 800; line-height: 1.1;
+    }
+    #wheelCanvas {
+      width: min(100%, 580px); aspect-ratio: 1 / 1;
+      border-radius: 50%; transform: rotate(0deg); transition: transform 5.8s cubic-bezier(0.12, 0.95, 0.14, 1);
+      box-shadow: 0 26px 40px rgba(0,0,0,0.15);
+    }
+    .wheel-actions { display: flex; justify-content: center; gap: var(--space-4); margin-top: var(--space-6); flex-wrap: wrap; }
+    .status { margin-top: var(--space-5); min-height: 3.5rem; text-align: center; color: var(--color-text-muted); font-size: var(--text-sm); line-height: 1.5; }
+    .status strong { color: var(--color-text); }
+    .side-stack { display: grid; gap: var(--space-8); }
+    .card-title { font-size: var(--text-lg); font-weight: 800; margin-bottom: 0.7rem; }
+    .muted { color: var(--color-text-muted); font-size: var(--text-sm); line-height: 1.65; }
+    .prize-list { margin-top: var(--space-5); display: grid; gap: 0.7rem; }
+    .prize-item {
+      display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; align-items: center;
+      padding: 0.85rem 1rem; border-radius: var(--radius-md); background: var(--color-surface-2); border: 1px solid var(--color-border);
+    }
+    .prize-item span:last-child { font-weight: 800; font-variant-numeric: tabular-nums; }
+    .lock-badge {
+      display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.5rem 0.8rem; margin-top: var(--space-5);
+      border-radius: var(--radius-full); font-size: var(--text-sm); font-weight: 700; background: rgba(67,122,34,0.12); color: var(--color-success);
+    }
+    .lock-badge.locked { background: rgba(161,44,123,0.1); color: var(--color-danger); }
+    .result-box {
+      margin-top: var(--space-5); padding: 1rem; border-radius: var(--radius-md); background: rgba(1,105,111,0.08); border: 1px solid rgba(1,105,111,0.16);
+    }
+    .result-box h3 { font-size: 1rem; margin-bottom: 0.35rem; }
+    .admin-entry {
+      position: fixed; right: 18px; bottom: 18px; width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center;
+      background: rgba(40,37,29,0.78); color: white; z-index: 20; box-shadow: 0 18px 30px rgba(0,0,0,0.22);
+    }
+    .admin-entry svg { width: 22px; height: 22px; }
+    .admin-layer { position: fixed; inset: 0; background: rgba(18,18,18,0.46); display: none; place-items: center; padding: 1rem; z-index: 30; }
+    .admin-layer.open { display: grid; }
+    .admin-dialog {
+      width: min(560px, 100%); background: var(--color-surface); border-radius: 1.35rem; padding: 1.2rem; border: 1px solid var(--color-border); box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+    }
+    .dialog-top { display: flex; justify-content: space-between; gap: 1rem; align-items: start; }
+    .close-btn { width: 44px; height: 44px; border-radius: 50%; background: var(--color-surface-2); color: var(--color-text); }
+    .form-grid { display: grid; gap: 0.85rem; margin-top: 1rem; }
+    label { font-size: var(--text-sm); font-weight: 700; display: grid; gap: 0.45rem; }
+    input[type="password"] {
+      min-height: 48px; padding: 0.8rem 0.95rem; border-radius: 0.95rem; border: 1px solid var(--color-border); background: rgba(255,255,255,0.98); color: #111;
+    }
+    .helper { font-size: 0.88rem; color: var(--color-text-muted); line-height: 1.55; }
+    .admin-actions, .inline-actions { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 1rem; }
+    @media (max-width: 920px) { .layout { grid-template-columns: 1fr; } }
+    @media (max-width: 560px) {
+      .app { width: min(100% - 1rem, 100%); }
+      .header { align-items: start; flex-direction: column; }
+      .hub { width: 78px; height: 78px; font-size: 0.75rem; }
+      .pointer { border-left-width: 15px; border-right-width: 15px; border-top-width: 28px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #wheelCanvas, .ghost-btn, .primary-btn, .danger-btn { transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="brand" aria-label="Lucky Wheel brand area">
+        <svg class="logo" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+          <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="3"></circle>
+          <path d="M24 7v34M7 24h34M12.7 12.7l22.6 22.6M35.3 12.7L12.7 35.3" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"></path>
+          <circle cx="24" cy="24" r="5" fill="currentColor"></circle>
+        </svg>
+        <div>
+          <h1>Lucky Prize Wheel</h1>
+          <p>One spin per player. The wheel stays locked until an admin unlocks it.</p>
+        </div>
+      </div>
+      <button type="button" class="ghost-btn" id="themeBtn" aria-label="Toggle color theme">Switch to dark mode</button>
+    </header>
+
+    <main class="layout">
+      <section class="panel wheel-panel" aria-labelledby="wheelTitle">
+        <h2 id="wheelTitle" class="sr-only">Prize wheel</h2>
+        <div class="wheel-shell">
+          <div class="pointer" aria-hidden="true"></div>
+          <canvas id="wheelCanvas" width="1200" height="1200" aria-label="Prize wheel" style="transform: rotate(7350deg);"></canvas>
+          <div class="hub" aria-hidden="true">SPIN<br>TO WIN</div>
+        </div>
+        <div class="wheel-actions">
+          <button id="spinBtn" class="primary-btn" type="button" disabled="">Spin now</button>
+          <button id="resetViewBtn" class="ghost-btn" type="button">Reset wheel view</button>
+        </div>
+        <p class="status" id="statusText">Saved result detected. Latest prize: <strong>RM 10</strong>.</p>
+      </section>
+
+      <aside class="side-stack">
+        <section class="panel info-panel" aria-labelledby="prizeTitle">
+          <h2 id="prizeTitle" class="card-title">Prize list</h2>
+          <p class="muted">Players only see the available prizes. The hidden winning rates are kept inside the admin area.</p>
+          <div class="prize-list" id="prizeList">
+          <div class="prize-item">
+            <span>RM 2</span>
+            <span>Prize</span>
+          </div>
+        
+          <div class="prize-item">
+            <span>RM 5</span>
+            <span>Prize</span>
+          </div>
+        
+          <div class="prize-item">
+            <span>RM 10</span>
+            <span>Prize</span>
+          </div>
+        
+          <div class="prize-item">
+            <span>RM 15</span>
+            <span>Prize</span>
+          </div>
+        
+          <div class="prize-item">
+            <span>RM 50</span>
+            <span>Prize</span>
+          </div>
+        
+          <div class="prize-item">
+            <span>Thank You</span>
+            <span>Prize</span>
+          </div>
+        </div>
+          <div id="lockBadge" class="lock-badge locked">Current status: Locked until admin unlocks</div>
+          <div class="result-box" id="resultBox" aria-live="polite">
+            <h3>Latest result</h3>
+            <p class="muted" id="lastResult">Latest result: RM 10</p>
+          </div>
+        </section>
+
+        <section class="panel admin-panel" aria-labelledby="usageTitle">
+          <h2 id="usageTitle" class="card-title">How it works</h2>
+          <p class="muted">This version stores the lock state in the browser with localStorage, so the wheel remains locked after refresh in the same browser unless storage is cleared.[web:16]</p>
+          <div class="inline-actions">
+            <button type="button" class="ghost-btn" id="showHelpBtn">Hide setup notes</button>
+          </div>
+          <div id="helpText" class="muted" style="display: block; margin-top: 1rem;">
+            1. Save the file as <strong>.html</strong> and open it in a browser.<br>
+            2. The default admin password is <strong>admin123</strong>.<br>
+            3. Search for <strong>ADMIN_PASSWORD</strong> in the code if you want to change it.<br>
+            4. The lock state is stored in this browser only. If you use another computer or clear browser storage, the state will not follow there.[web:20]
+          </div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <button class="admin-entry" id="adminOpenBtn" type="button" aria-label="Open admin controls">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3"></circle>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82L4.21 7.2a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c0 .67.39 1.28 1 1.51.16.07.33.1.51.1H21a2 2 0 1 1 0 4h-.09c-.68 0-1.29.39-1.51 1z"></path>
+    </svg>
+  </button>
+
+  <div class="admin-layer" id="adminLayer" aria-hidden="true">
+    <div class="admin-dialog" role="dialog" aria-modal="true" aria-labelledby="adminTitle">
+      <div class="dialog-top">
+        <div>
+          <h2 id="adminTitle" class="card-title" style="margin-bottom:0.25rem;">Admin controls</h2>
+          <p class="helper">Only admins can unlock the next spin, clear the saved result, and view the hidden probability table.</p>
+        </div>
+        <button class="close-btn" id="closeAdminBtn" type="button" aria-label="Close admin panel">✕</button>
+      </div>
+      <div class="form-grid">
+        <label>
+          Admin password
+          <input id="adminPasswordInput" type="password" placeholder="Enter password" autocomplete="current-password">
+        </label>
+      </div>
+      <div class="admin-actions">
+        <button type="button" class="primary-btn" id="unlockBtn">Verify &amp; unlock</button>
+        <button type="button" class="ghost-btn" id="relockBtn">Lock again</button>
+        <button type="button" class="danger-btn" id="clearResultBtn">Clear result</button>
+      </div>
+      <div class="result-box" style="margin-top:1rem; background: rgba(1,105,111,0.06); border-color: rgba(1,105,111,0.14);">
+        <h3>Hidden probability table</h3>
+        <div class="prize-list" id="adminPrizeList">
+          <div class="prize-item">
+            <span>RM 2</span>
+            <span>35%</span>
+          </div>
+        
+          <div class="prize-item">
+            <span>RM 5</span>
+            <span>30%</span>
+          </div>
+        
+          <div class="prize-item">
+            <span>RM 10</span>
+            <span>20%</span>
+          </div>
+        
+          <div class="prize-item">
+            <span>RM 15</span>
+            <span>9%</span>
+          </div>
+        
+          <div class="prize-item">
+            <span>RM 50</span>
+            <span>1%</span>
+          </div>
+        
+          <div class="prize-item">
+            <span>Thank You</span>
+            <span>5%</span>
+          </div>
+        </div>
+      </div>
+      <p id="adminStatus" class="helper" style="margin-top:1rem;" aria-live="polite">Waiting for action.</p>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const ADMIN_PASSWORD = 'asdf1111';
+      const STORAGE_KEY = 'lucky-wheel-state-v3';
+      const prizes = [
+        { label: 'RM 2', chance: 35, color: '#0f7f86' },
+        { label: 'RM 5', chance: 30, color: '#2f9fa3' },
+        { label: 'RM 10', chance: 20, color: '#f0b548' },
+        { label: 'RM 15', chance: 9, color: '#e7833d' },
+        { label: 'RM 50', chance: 1, color: '#bc4f7a' },
+        { label: 'Thank You', chance: 5, color: '#7b7a76' }
+      ];
+      const totalChance = prizes.reduce((sum, item) => sum + item.chance, 0);
+      const equalSliceDegrees = 360 / prizes.length;
+
+      const canvas = document.getElementById('wheelCanvas');
+      const ctx = canvas.getContext('2d');
+      const spinBtn = document.getElementById('spinBtn');
+      const resetViewBtn = document.getElementById('resetViewBtn');
+      const statusText = document.getElementById('statusText');
+      const prizeList = document.getElementById('prizeList');
+      const adminPrizeList = document.getElementById('adminPrizeList');
+      const lockBadge = document.getElementById('lockBadge');
+      const lastResult = document.getElementById('lastResult');
+      const adminLayer = document.getElementById('adminLayer');
+      const adminOpenBtn = document.getElementById('adminOpenBtn');
+      const closeAdminBtn = document.getElementById('closeAdminBtn');
+      const adminPasswordInput = document.getElementById('adminPasswordInput');
+      const unlockBtn = document.getElementById('unlockBtn');
+      const relockBtn = document.getElementById('relockBtn');
+      const clearResultBtn = document.getElementById('clearResultBtn');
+      const adminStatus = document.getElementById('adminStatus');
+      const themeBtn = document.getElementById('themeBtn');
+      const showHelpBtn = document.getElementById('showHelpBtn');
+      const helpText = document.getElementById('helpText');
+
+      const state = {
+        locked: false,
+        spinning: false,
+        currentRotation: 0,
+        lastPrize: null,
+        theme: 'light'
+      };
+
+      function saveState() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            locked: state.locked,
+            currentRotation: state.currentRotation,
+            lastPrize: state.lastPrize,
+            theme: state.theme
+          }));
+        } catch (error) {
+          console.warn('Could not save state:', error);
+        }
+      }
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return;
+          const saved = JSON.parse(raw);
+          state.locked = Boolean(saved.locked);
+          state.currentRotation = Number(saved.currentRotation) || 0;
+          state.lastPrize = saved.lastPrize || null;
+          state.theme = saved.theme || state.theme;
+        } catch (error) {
+          console.warn('Could not load saved state:', error);
+        }
+      }
+
+      function renderPrizeList() {
+        prizeList.innerHTML = prizes.map(item => `
+          <div class="prize-item">
+            <span>${item.label}</span>
+            <span>Prize</span>
+          </div>
+        `).join('');
+
+        adminPrizeList.innerHTML = prizes.map(item => `
+          <div class="prize-item">
+            <span>${item.label}</span>
+            <span>${item.chance}%</span>
+          </div>
+        `).join('');
+      }
+
+      function drawWheel() {
+        const center = canvas.width / 2;
+        const radius = center - 30;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let startAngle = -Math.PI / 2;
+
+        prizes.forEach((prize, index) => {
+          const sliceAngle = (Math.PI * 2) / prizes.length;
+          const endAngle = startAngle + sliceAngle;
+
+          ctx.beginPath();
+          ctx.moveTo(center, center);
+          ctx.arc(center, center, radius, startAngle, endAngle);
+          ctx.closePath();
+          ctx.fillStyle = prize.color;
+          ctx.fill();
+
+          ctx.save();
+          ctx.translate(center, center);
+          ctx.rotate(startAngle + sliceAngle / 2);
+          ctx.textAlign = 'right';
+          ctx.fillStyle = index === 4 ? '#fff' : '#1b1a16';
+          ctx.font = '700 42px Inter, sans-serif';
+          ctx.fillText(prize.label, radius - 72, 10);
+          ctx.restore();
+
+          startAngle = endAngle;
+        });
+
+        ctx.beginPath();
+        ctx.arc(center, center, radius + 8, 0, Math.PI * 2);
+        ctx.lineWidth = 20;
+        ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(center, center, radius + 28, 0, Math.PI * 2);
+        ctx.lineWidth = 16;
+        ctx.strokeStyle = 'rgba(40,37,29,0.08)';
+        ctx.stroke();
+      }
+
+      function weightedPick() {
+        const random = Math.random() * totalChance;
+        let cumulative = 0;
+        for (const prize of prizes) {
+          cumulative += prize.chance;
+          if (random <= cumulative) return prize;
+        }
+        return prizes[prizes.length - 1];
+      }
+
+      function getPrizeIndex(label) {
+        return prizes.findIndex(item => item.label === label);
+      }
+
+      function getTargetRotationForPrize(prize) {
+        const index = getPrizeIndex(prize.label);
+        const sliceCenterAngle = (index * equalSliceDegrees) + (equalSliceDegrees / 2);
+        const desiredCanvasAngle = 360 - sliceCenterAngle;
+        const fullSpins = 6 * 360;
+        return fullSpins + desiredCanvasAngle;
+      }
+
+      function updateLockUI() {
+        spinBtn.disabled = state.locked || state.spinning;
+        resetViewBtn.disabled = state.spinning;
+        lockBadge.classList.toggle('locked', state.locked);
+        lockBadge.textContent = state.locked ? 'Current status: Locked until admin unlocks' : 'Current status: Ready to spin';
+      }
+
+      function renderLastResult() {
+        lastResult.textContent = state.lastPrize ? `Latest result: ${state.lastPrize}` : 'No result yet.';
+      }
+
+      function syncCanvasRotation() {
+        canvas.style.transform = `rotate(${state.currentRotation}deg)`;
+      }
+
+      function announceResult(prize) {
+        state.lastPrize = prize.label;
+        statusText.innerHTML = `Spin complete. The winning prize is <strong>${prize.label}</strong>. This player is now locked out until an admin unlocks the wheel.`;
+        renderLastResult();
+        saveState();
+      }
+
+      function spinWheel() {
+        if (state.locked || state.spinning) return;
+        state.spinning = true;
+        updateLockUI();
+        statusText.textContent = 'Spinning... please wait.';
+
+        const prize = weightedPick();
+        const targetRotation = state.currentRotation + getTargetRotationForPrize(prize);
+        state.currentRotation = targetRotation;
+        saveState();
+        canvas.style.transform = `rotate(${targetRotation}deg)`;
+
+        window.setTimeout(() => {
+          state.spinning = false;
+          state.locked = true;
+          announceResult(prize);
+          updateLockUI();
+          saveState();
+        }, 5900);
+      }
+
+      function resetView() {
+        if (state.spinning) return;
+        state.currentRotation = 0;
+        canvas.style.transition = 'transform 900ms cubic-bezier(0.16, 1, 0.3, 1)';
+        canvas.style.transform = 'rotate(0deg)';
+        window.setTimeout(() => {
+          canvas.style.transition = 'transform 5.8s cubic-bezier(0.12, 0.95, 0.14, 1)';
+        }, 920);
+        statusText.textContent = state.locked ? 'Wheel reset. The game is still locked.' : 'Wheel reset to the default angle.';
+        saveState();
+      }
+
+      function openAdmin() {
+        adminLayer.classList.add('open');
+        adminLayer.setAttribute('aria-hidden', 'false');
+        adminPasswordInput.focus();
+      }
+
+      function closeAdmin() {
+        adminLayer.classList.remove('open');
+        adminLayer.setAttribute('aria-hidden', 'true');
+        adminPasswordInput.value = '';
+        adminOpenBtn.focus();
+      }
+
+      function verifyPassword() {
+        return adminPasswordInput.value === ADMIN_PASSWORD;
+      }
+
+      function unlockGame() {
+        if (!verifyPassword()) {
+          adminStatus.textContent = 'Wrong password. Unlock failed.';
+          return;
+        }
+        state.locked = false;
+        state.spinning = false;
+        updateLockUI();
+        statusText.textContent = 'Admin unlocked the wheel. The next player may spin once.';
+        adminStatus.textContent = 'Wheel unlocked successfully.';
+        saveState();
+      }
+
+      function relockGame() {
+        if (!verifyPassword()) {
+          adminStatus.textContent = 'Wrong password. Lock failed.';
+          return;
+        }
+        state.locked = true;
+        updateLockUI();
+        statusText.textContent = 'Admin locked the wheel manually.';
+        adminStatus.textContent = 'Wheel locked successfully.';
+        saveState();
+      }
+
+      function clearResult() {
+        if (!verifyPassword()) {
+          adminStatus.textContent = 'Wrong password. Clear result failed.';
+          return;
+        }
+        state.lastPrize = null;
+        renderLastResult();
+        statusText.textContent = state.locked ? 'Saved result cleared. The wheel remains locked.' : 'Saved result cleared. Waiting for the next player.';
+        adminStatus.textContent = 'Saved result cleared.';
+        saveState();
+      }
+
+      function applyTheme(mode) {
+        state.theme = mode;
+        document.documentElement.setAttribute('data-theme', mode);
+        themeBtn.textContent = mode === 'light' ? 'Switch to dark mode' : 'Switch to light mode';
+        saveState();
+      }
+
+      loadState();
+      renderPrizeList();
+      drawWheel();
+      syncCanvasRotation();
+      renderLastResult();
+      updateLockUI();
+      applyTheme(state.theme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+      if (state.locked) {
+        statusText.textContent = 'The wheel is still locked from the previous completed spin.';
+      }
+      if (state.lastPrize) {
+        statusText.innerHTML = `Saved result detected. Latest prize: <strong>${state.lastPrize}</strong>.`;
+      }
+
+      spinBtn.addEventListener('click', spinWheel);
+      resetViewBtn.addEventListener('click', resetView);
+      adminOpenBtn.addEventListener('click', openAdmin);
+      closeAdminBtn.addEventListener('click', closeAdmin);
+      adminLayer.addEventListener('click', (event) => {
+        if (event.target === adminLayer) closeAdmin();
+      });
+      unlockBtn.addEventListener('click', unlockGame);
+      relockBtn.addEventListener('click', relockGame);
+      clearResultBtn.addEventListener('click', clearResult);
+      adminPasswordInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') unlockGame();
+      });
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && adminLayer.classList.contains('open')) closeAdmin();
+      });
+      showHelpBtn.addEventListener('click', () => {
+        const visible = helpText.style.display === 'block';
+        helpText.style.display = visible ? 'none' : 'block';
+        showHelpBtn.textContent = visible ? 'Show setup notes' : 'Hide setup notes';
+      });
+      themeBtn.addEventListener('click', () => {
+        const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        applyTheme(next);
+      });
+    })();
+  </script>
+
+
+EOF &amp;&amp; chmod 644 output/wheel-app/weighted-prize-wheel.html
+</body>
+</html>
